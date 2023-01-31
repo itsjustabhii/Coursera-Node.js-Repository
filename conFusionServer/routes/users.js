@@ -1,6 +1,6 @@
 import express from "express";
 const bodyParser = require("body-parser");
-import User from "../models/user";
+import UserSchema from "../models/user";
 
 var router = express.Router();
 router.use(bodyParser.json);
@@ -12,14 +12,14 @@ router.get("/", function (req, res, next) {
 
 //Signup Endpoint
 router.post("/signup", (req, res, next) => {
-  User.findOne({ username: req.body.username })
+  UserSchema.findOne({ username: req.body.username })
     .then((user) => {
       if (user != null) {
         var err = new Error("User " + req.body.username + " already exists");
         err.status = 403;
         next(err);
       } else {
-        return User.create({
+        return UserSchema.create({
           username: req.body.username,
           password: req.body.password,
         });
@@ -53,7 +53,7 @@ router.post("/login", (req, res, next) => {
       .split(":");
     var username = auth[0];
     var password = auth[1];
-    User.FindOne({ username: username })
+    UserSchema.findOne({ username: username })
       .then((user) => {
         if (user === null) {
           var err = new Error("User " + username + " does not exists!");
