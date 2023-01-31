@@ -3,26 +3,15 @@ var express = require("express");
 var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
+import mongoose from "mongoose";
+var session = require("express-session");
+var FileStore = require("session-file-store")(session); //stores session cookies
 
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
 var dishRouter = require("./routes/dishRouter");
 var promoRouter = require("./routes/promoRouter");
 var leaderRouter = require("./routes/leaderRouter");
-
-import mongoose from "mongoose";
-
-import Dishes from "./models/dishes";
-
-const url = 'mongodb://localhost:27017/conFusion'
-const connect = mongoose.connect(url)
-
-//Establishes connection from app.js to mongoDB
-connect.then((db) => {
-  console.log('Connected correctly to server')
-},  (err) => {console.log(connect(url))})
-
-var app = express();
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
@@ -31,14 +20,80 @@ app.set("view engine", "jade");
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
+// app.use(cookieParser("123456-67890-09876-54321"));
+
+app.use(
+  session({
+    name: "Session-id",
+    secret: "123456-67890-09876-54321",
+    saveUninitialized: false,
+    resave: false,
+    store: new FileStore(),
+  })
+);
 
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
 app.use("/dishes", dishRouter);
 app.use("/promotions", promoRouter);
 app.use("/leaders", leaderRouter);
+
+function auth(req, res, next) {
+  console.log(req.session);
+  if (!req.session.user) {
+    var authHeader = req.headers.authorization;
+
+    if (!authHeader) {
+      var err = new Error("You are not authenticated!");
+      res.setHeader("WWW-Authenticate", "Basic");
+      err.status = 401;
+      return next(err);
+    }
+
+    var auth = new Buffer.from(authHeader.split(" ")[1], "base64")
+      .toString()
+      .split(":");
+    var username = auth[0];
+    var password = auth[1];
+    if (username == "admin" && password == "password") {
+      req.session.user = "admin";
+      next(); // authorized
+    } else {
+      var err = new Error("You are not authenticated!");
+      res.setHeader("WWW-Authenticate", "Basic");
+      err.status = 401;
+      next(err);
+    }
+  } else {
+    if (req.session.user === "admin") {
+      next();
+    } else {
+      var err = new Error("You are not authenticated!");
+      err.status = 401;
+      next(err);
+    }
+  }
+}
+
+app.use(auth);
+
+import Dishes from "./models/dishes";
+
+const url = "mongodb://localhost:27017/conFusion";
+const connect = mongoose.connect(url);
+
+//Establishes connection from app.js to mongoDB
+connect.then(
+  (db) => {
+    console.log("Connected correctly to server");
+  },
+  (err) => {
+    console.log(connect(url));
+  }
+);
+
+var app = express();
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
