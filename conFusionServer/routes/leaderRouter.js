@@ -1,34 +1,95 @@
+const bodyParser = require("body-parser");
 const express = require("express");
-const router = express.Router();
+// const router = express.Router();
+const authenticate = require("../authenticate");
+const Leaders = require("../models/leaders");
+const leaderRouter = express.Router();
 
-router
+leaderRouter.use(bodyParser.json());
+
+leaderRouter
   .route("/")
   .get((req, res, next) => {
-    console.log("code to handle GET request for all leaders");
+    Leaders.find({})
+      .then(
+        (Leaders) => {
+          res.statusCode = 200;
+          res.setHeader("Content-Type", "application/json");
+          res.json(Leaders);
+        },
+        (err) => next(err)
+      )
+      .catch((err) => next(err));
   })
-  .post((req, res, next) => {
-    console.log("code to handle POST request for a new leader");
+  .post(
+    authenticate.verifyUser(),
+    (req, res, next) => {
+      Leaders.create(req.body).then((leader) => {
+        console.log("leader created ", leader);
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+        res.json(leader);
+      });
+    },
+    (err) => next(err).catch((err) => next(err))
+  )
+
+  .put(authenticate.verifyUser(), (req, res, next) => {
+    res.statusCode = 403;
+    res.end("PUT operation not supported on /Leaders");
   })
-  .put((req, res, next) => {
-    console.log("code to handle PUT request for a new leader");
-  })
-  .delete((req, res, next) => {
-    console.log("code to handle DELETE request for a new leader");
+  .delete(authenticate.verifyUser(), (req, res, next) => {
+    Leaders.remove({}).then(
+      (resp) => {
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+        res.json(resp);
+      },
+      (err) => next(err).catch((err) => next(err))
+    );
   });
 
-router
+leaderRouter
   .route("/:leaderId")
   .get((req, res, next) => {
-    console.log("code to handle GET request for a specific leader");
+    Leaders.findById(req.params.leaderId).then(
+      (leader) => {
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+        res.json(leader);
+      },
+      (err) => next(err).catch((err) => next(err))
+    );
   })
-  .post((req, res, next) => {
-    console.log("code to handle POST request for a specific leader");
+  .post(authenticate.verifyUser(), (req, res, next) => {
+    res.statusCode = 403;
+    res.end("PUT operation not supported on /Leaders/" + req.params.leaderId);
   })
-  .put((req, res, next) => {
-    console.log("code to handle PUT request for a specific leader");
+  .put(authenticate.verifyUser(), (req, res, next) => {
+    Leaders.findByIdAndUpdate(
+      req.params.leaderId,
+      {
+        $set: req.body,
+      },
+      { new: true }
+    ).then(
+      (leader) => {
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+        res.json(leader);
+      },
+      (err) => next(err).catch((err) => next(err))
+    );
   })
-  .delete((req, res, next) => {
-    console.log("code to handle DELETE request for a specific leader");
+  .delete(authenticate.verifyUser(), (req, res, next) => {
+    Leaders.findByIdAndRemove(req.params.leaderId).then(
+      (resp) => {
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+        res.json(resp);
+      },
+      (err) => next(err).catch((err) => next(err))
+    );
   });
 
-module.exports = router;
+module.exports = leaderRouter;
