@@ -23,7 +23,6 @@ app.set("view engine", "jade");
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(express.static(path.join(__dirname, "public")));
 // app.use(cookieParser("123456-67890-09876-54321"));
 
 app.use(passport.initialize());
@@ -31,18 +30,7 @@ app.use(passport.initialize());
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
 
-function auth(req, res, next) {
-  console.log(req.session);
-  if (!req.user) {
-    var err = new Error("You are not authenticated!");
-    err.status = 401;
-    return next(err);
-  } else {
-    if (req.session.user === "authenticated") {
-      next();
-    }
-  }
-}
+app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/dishes", dishRouter);
 app.use("/promotions", promoRouter);
