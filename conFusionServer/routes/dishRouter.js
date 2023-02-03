@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 import mongoose from "mongoose";
+const authenticate = require("../authenticate");
 
 const Dishes = require("../models/dishes");
 const dishRouter = express.Router();
@@ -21,7 +22,7 @@ dishRouter
       )
       .catch((err) => next(err));
   })
-  .post((req, res, next) => {
+  .post(authenticate.verifyUser, (req, res, next) => {
     Dishes.create(req.body)
       .then(
         (dish) => {
