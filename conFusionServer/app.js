@@ -8,6 +8,7 @@ var session = require("express-session");
 var FileStore = require("session-file-store")(session); //stores sessio cookies
 import passport from "passport";
 import { authenticate } from "passport";
+import config from "./config";
 
 var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
@@ -25,18 +26,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
 // app.use(cookieParser("123456-67890-09876-54321"));
 
-app.use(
-  session({
-    name: "Session-id",
-    secret: "123456-67890-09876-54321",
-    saveUninitialized: false,
-    resave: false,
-    store: new FileStore(),
-  })
-);
-
 app.use(passport.initialize());
-app.use(passport.session());
 
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
@@ -62,8 +52,10 @@ app.use(auth);
 
 import Dishes from "./models/dishes";
 
-const url = "mongodb://localhost:27017/conFusion";
-const connect = mongoose.connect(url);
+const url = config.mongoUrl;
+const connect = mongoose.connect(url, {
+  useMongoClient: true,
+});
 
 //Establishes connection from app.js to mongoDB
 connect.then(
