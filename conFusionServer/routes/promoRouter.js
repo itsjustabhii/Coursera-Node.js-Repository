@@ -4,11 +4,15 @@ const bodyParser = require("body-parser");
 const Promotions = require("../models/promotions");
 const promoRouter = express.Router();
 const authenticate = require("../authenticate");
+const cors = require("./cors");
 
 promoRouter.use(bodyParser.json());
 
 promoRouter
   .route("/")
+  .options(cors.corsWithOptions, (req, res) => {
+    res.sendStatus(200);
+  })
   .get((req, res, next) => {
     Promotions.find({})
       .then(
@@ -21,7 +25,7 @@ promoRouter
       )
       .catch((err) => next(err));
   })
-  .post(authenticate.verifyUser(), (req, res, next) => {
+  .post(cors.corsWithOptions, authenticate.verifyUser(), (req, res, next) => {
     Promotions.create(req.body).then(
       (promotion) => {
         console.log("leader created ", promotion);
@@ -33,11 +37,11 @@ promoRouter
     );
   })
 
-  .put(authenticate.verifyUser(), (req, res, next) => {
+  .put(cors.corsWithOptions, authenticate.verifyUser(), (req, res, next) => {
     res.statusCode = 403;
     res.end("PUT operation not supported on /Promotions");
   })
-  .delete(authenticate.verifyUser(), (req, res, next) => {
+  .delete(cors.corsWithOptions, authenticate.verifyUser(), (req, res, next) => {
     Promotions.remove({}).then(
       (resp) => {
         res.statusCode = 200;
@@ -50,6 +54,9 @@ promoRouter
 
 promoRouter
   .route("/:promoId")
+  .options(cors.corsWithOptions, (req, res) => {
+    res.sendStatus(200);
+  })
   .get((req, res, next) => {
     Promotions.findById(req.params.leaderId).then(
       (promotions) => {
@@ -60,11 +67,11 @@ promoRouter
       (err) => next(err).catch((err) => next(err))
     );
   })
-  .post(authenticate.verifyUser(), (req, res, next) => {
+  .post(cors.corsWithOptions, authenticate.verifyUser(), (req, res, next) => {
     res.statusCode = 403;
     res.end("PUT operation not supported on /Promotions/" + req.params.promoId);
   })
-  .put(authenticate.verifyUser(), (req, res, next) => {
+  .put(cors.corsWithOptions, authenticate.verifyUser(), (req, res, next) => {
     Promotions.findByIdAndUpdate(
       req.params.promoId,
       {
@@ -80,7 +87,7 @@ promoRouter
       (err) => next(err).catch((err) => next(err))
     );
   })
-  .delete(authenticate.verifyUser(), (req, res, next) => {
+  .delete(cors.corsWithOptions, authenticate.verifyUser(), (req, res, next) => {
     Promotions.findByIdAndRemove(req.params.promoId).then(
       (resp) => {
         res.statusCode = 200;
