@@ -3,9 +3,13 @@ const bodyParser = require("body-parser");
 import UserSchema from "../models/user";
 import passport, { authenticate } from "passport";
 import authenticate from "../authenticate";
+const cors = require("./cors");
 
 var router = express.Router();
 router.use(bodyParser.json);
+
+//Forbids Ordinary users from performing operations
+router.route("/users").get(verifyAdmin, usersController.index);
 
 /* GET users listing. */
 router.get("/", function (req, res, next) {
