@@ -16,6 +16,7 @@ var dishRouter = require("./routes/dishRouter");
 var promoRouter = require("./routes/promoRouter");
 var leaderRouter = require("./routes/leaderRouter");
 var uploadRouter = require("./routes/uploadRouter");
+var favoriteRouter = require("./routes/favoriteRouter");
 
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
@@ -37,6 +38,7 @@ app.use("/dishes", dishRouter);
 app.use("/promotions", promoRouter);
 app.use("/leaders", leaderRouter);
 app.use("/imageUpload", uploadRouter);
+app.use("/favorite", favoriteRouter);
 
 app.use(auth);
 
